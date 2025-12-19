@@ -52,12 +52,12 @@ jobs:
       # -------------------------
       - name: Install Trivy
         run: |
-          sudo apt-get update -y
-          sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+          sudo dnf update -y
+          sudo dnf install -y wget apt-transport-https gnupg lsb-release
           wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
           echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee /etc/apt/sources.list.d/trivy.list
-          sudo apt-get update -y
-          sudo apt-get install -y trivy
+          sudo dnf update -y
+          sudo dnf install -y trivy
 
       - name: Trivy filesystem scan (JSON report)
         run: |
@@ -65,8 +65,8 @@ jobs:
 
       - name: Install Gitleaks
         run: |
-          sudo apt-get update -y
-          sudo apt-get install -y gitleaks
+          sudo dnf update -y
+          sudo dnf install -y gitleaks
 
       - name: Gitleaks secret scan (JSON report)
         run: |
