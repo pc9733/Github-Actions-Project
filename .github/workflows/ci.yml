@@ -50,23 +50,39 @@ jobs:
       #    (A) Trivy
       #    (B) Gitleaks
       # -------------------------
-      - name: Install Trivy
+      - name: Install Trivy (dnf)
         run: |
-          sudo dnf update -y
-          sudo dnf install -y wget apt-transport-https gnupg lsb-release
-          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-          echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee /etc/apt/sources.list.d/trivy.list
-          sudo dnf update -y
-          sudo dnf install -y trivy
+          sudo dnf -y update
+          sudo dnf -y install curl ca-certificates gnupg2
+
+          # Import Aqua Security GPG key
+          sudo rpm --import https://aquasecurity.github.io/trivy-repo/rpm/public.key
+
+          # Add Trivy repo
+          sudo tee /etc/yum.repos.d/trivy.repo > /dev/null <<'EOF'
+          [trivy]
+          name=Trivy repository
+          baseurl=https://aquasecurity.github.io/trivy-repo/rpm/releases/8/$basearch/
+          enabled=1
+          gpgcheck=1
+          gpgkey=https://aquasecurity.github.io/trivy-repo/rpm/public.key
+          EOF
+
+          # Install Trivy
+          sudo dnf -y install trivy
+
+          # Verify installation
+          trivy --version
+
 
       - name: Trivy filesystem scan (JSON report)
         run: |
           trivy fs --format json -o trivy-fs-report.json .
 
-      - name: Install Gitleaks
+      - name: Install Gitleaks (dnf)
         run: |
-          sudo dnf update -y
-          sudo dnf install -y gitleaks
+          sudo dnf -y update
+          sudo dnf -y install gitleaks
 
       - name: Gitleaks secret scan (JSON report)
         run: |
