@@ -77,10 +77,14 @@ jobs:
         run: |
           trivy fs --format json -o trivy-fs-report.json .
 
-      - name: Install Gitleaks (dnf)
+      - name: Install Gitleaks (binary)
         run: |
-          sudo dnf -y update
-          sudo dnf -y install gitleaks
+          GITLEAKS_VERSION="8.18.3"
+          curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" -o gitleaks.tar.gz
+          tar -xzf gitleaks.tar.gz gitleaks
+          sudo mv gitleaks /usr/local/bin/gitleaks
+          sudo chmod +x /usr/local/bin/gitleaks
+          rm gitleaks.tar.gz
 
       - name: Gitleaks secret scan (JSON report)
         run: |
