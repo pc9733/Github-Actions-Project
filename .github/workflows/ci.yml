@@ -53,8 +53,7 @@ jobs:
       - name: Install Trivy (dnf)
         run: |
           sudo dnf -y update
-          sudo dnf -y install ca-certificates gnupg2 # curl-minimal already installed on AL2023
-
+          sudo dnf -y install gnupg2
           # Import Aqua Security GPG key
           sudo rpm --import https://aquasecurity.github.io/trivy-repo/rpm/public.key
 
