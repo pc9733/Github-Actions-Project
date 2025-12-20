@@ -154,7 +154,7 @@ jobs:
         uses: sonarsource/sonarqube-quality-gate-action@master
         with:
           pollingTimeoutSec: 600
-          env:
+        env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
 
