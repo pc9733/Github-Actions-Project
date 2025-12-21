@@ -42,7 +42,9 @@ jobs:
         with:
           name: image-uri
           path: .
-          run-id: ${{ github.event.workflow_run.id }}  # download artifact from the CI workflow run
+          run-id: ${{ github.event.workflow_run.id }}
+          repository: ${{ github.repository }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Read IMAGE_URI
         run: |
