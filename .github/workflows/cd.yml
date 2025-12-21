@@ -86,19 +86,19 @@ jobs:
       # 5) Deploy
       # Apply manifests + set image to exact IMAGE_URI
       # -------------------------
-      - name: Apply manifests
+      - name: Apply manifests (env folder)
         run: |
-         kubectl get ns "${{ vars.K8S_NAMESPACE }}" >/dev/null 2>&1 || kubectl create ns "${{ vars.K8S_NAMESPACE }}"
-         kubectl apply -f k8s/
-
-      - name: Set image 
+         kubectl apply -f "${{ vars.K8S_DIR }}/"
+         kubectl get deploy -n "${{ vars.K8S_NAMESPACE }}"
+      - name: Set image (pin exact build)  
         run: |
-          kubectl -n "${{ vars.K8S_NAMESPACE }}" set image deployment/${{ vars.DEPLOYMENT_NAME }} \
-            ${{ vars.CONTAINER_NAME }}="${IMAGE_URI}"
+         kubectl -n "${{ vars.K8S_NAMESPACE }}" set image deployment/${{ vars.DEPLOYMENT_NAME }} \
+         ${{ vars.CONTAINER_NAME }}="${IMAGE_URI}"
+        
 
       # -------------------------
       # 6) Optional but recommended: Rollout status (fail if stuck)
       # -------------------------
       - name: Wait for rollout
         run: |
-          kubectl -n "${{ vars.K8S_NAMESPACE }}" rollout status deployment/${{ vars.DEPLOYMENT_NAME }} --timeout=300s
+         kubectl -n "${{ vars.K8S_NAMESPACE }}" rollout status deployment/${{ vars.DEPLOYMENT_NAME }} --timeout=300s
