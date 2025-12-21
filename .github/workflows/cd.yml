@@ -4,6 +4,19 @@ on:
   workflow_run:
     workflows: ["CI - Build, Scan, Test, Sonar, Push to ECR"]
     types: [completed]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy (dev/prod)"
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+        default: prod
+      ci_run_id:
+        description: "CI workflow run ID that produced the image artifact"
+        required: true
 
 permissions:
   id-token: write
@@ -15,17 +28,20 @@ env:
 
 jobs:
   deploy:
-    # Deploy only if CI succeeded on a push to deployable branches
-    if: ${{ github.event.workflow_run.conclusion == 'success' &&
+    # Auto deploy develop/releases after CI; prod (main) requires manual dispatch
+    if: ${{ (github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'push' &&
       (startsWith(github.event.workflow_run.head_branch, 'release/') ||
-       github.event.workflow_run.head_branch == 'develop' ||
-       github.event.workflow_run.head_branch == 'main') }}
+       github.event.workflow_run.head_branch == 'develop')) ||
+      github.event_name == 'workflow_dispatch' }}
     runs-on: self-hosted
 
     # GitHub Environments selection (dev / stage / prod)
-    # You can control approvals in GitHub settings per environment.
-    environment: ${{ startsWith(github.event.workflow_run.head_branch, 'release/') && 'stage' || github.event.workflow_run.head_branch == 'develop' && 'dev' || github.event.workflow_run.head_branch == 'main' && 'prod' || 'dev' }}
+    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.environment ||
+      startsWith(github.event.workflow_run.head_branch, 'release/') && 'stage' ||
+      github.event.workflow_run.head_branch == 'develop' && 'dev' ||
+      github.event.workflow_run.head_branch == 'main' && 'prod' || 'dev' }}
 
     steps:
       # -------------------------
@@ -45,7 +61,7 @@ jobs:
         with:
           name: image-uri
           path: .
-          run-id: ${{ github.event.workflow_run.id }}
+          run-id: ${{ github.event_name == 'workflow_dispatch' && inputs.ci_run_id || github.event.workflow_run.id }}
           repository: ${{ github.repository }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
