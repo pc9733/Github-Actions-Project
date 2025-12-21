@@ -88,7 +88,8 @@ jobs:
       # -------------------------
       - name: Apply manifests
         run: |
-          kubectl apply -n "${{ vars.K8S_NAMESPACE }}" -f k8s/
+         kubectl get ns "${{ vars.K8S_NAMESPACE }}" >/dev/null 2>&1 || kubectl create ns "${{ vars.K8S_NAMESPACE }}"
+         kubectl apply -f k8s/
 
       - name: Set image (pin exact build)
         run: |
