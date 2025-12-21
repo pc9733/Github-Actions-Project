@@ -91,7 +91,7 @@ jobs:
          kubectl get ns "${{ vars.K8S_NAMESPACE }}" >/dev/null 2>&1 || kubectl create ns "${{ vars.K8S_NAMESPACE }}"
          kubectl apply -f k8s/
 
-      - name: Set image (pin exact build)
+      - name: Set image 
         run: |
           kubectl -n "${{ vars.K8S_NAMESPACE }}" set image deployment/${{ vars.DEPLOYMENT_NAME }} \
             ${{ vars.CONTAINER_NAME }}="${IMAGE_URI}"
