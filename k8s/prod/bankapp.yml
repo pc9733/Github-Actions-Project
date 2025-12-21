@@ -1,9 +1,8 @@
----
-# MySQL Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mysql
+  namespace: prd
 spec:
   selector:
     matchLabels:
@@ -22,27 +21,27 @@ spec:
             - name: MYSQL_ROOT_PASSWORD
               value: "Test@123"
             - name: MYSQL_DATABASE
-              value: "bankappdb"
+              value: "prd-bankappdb"
           ports:
             - containerPort: 3306
               name: mysql
 ---
-# MySQL Service
 apiVersion: v1
 kind: Service
 metadata:
   name: mysql-service
+  namespace: prd
 spec:
   selector:
     app: mysql
   ports:
     - port: 3306
 ---
-# Bank application Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: bankapp
+  namespace: prd
 spec:
   replicas: 1
   selector:
@@ -55,22 +54,22 @@ spec:
     spec:
       containers:
         - name: bankapp
-          image: adijaiswal/bankapp:latest
+          image: adijaiswal/dev-bankapp:latest
           ports:
             - containerPort: 8080
           env:
             - name: SPRING_DATASOURCE_URL
-              value: jdbc:mysql://mysql-service:3306/bankappdb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+              value: jdbc:mysql://mysql-service:3306/prd-bankappdb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
             - name: SPRING_DATASOURCE_USERNAME
               value: root
             - name: SPRING_DATASOURCE_PASSWORD
               value: Test@123
 ---
-# Bank application Service
 apiVersion: v1
 kind: Service
 metadata:
   name: bankapp-service
+  namespace: prd
 spec:
   selector:
     app: bankapp
@@ -78,3 +77,4 @@ spec:
   ports:
     - port: 80
       targetPort: 8080
+
