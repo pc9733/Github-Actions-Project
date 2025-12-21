@@ -143,6 +143,7 @@ jobs:
         uses: actions/checkout@v4
         with:
            fetch-depth: 0
+           clean: false  # keep the built JAR around for the Docker build
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v5.0.0
