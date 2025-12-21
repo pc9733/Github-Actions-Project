@@ -185,18 +185,18 @@ jobs:
           docker push "$IMAGE_URI"
           echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
 
-      # # -------------------------
-      # # 10) Share IMAGE_URI to CD
-      # # -------------------------
-      # - name: Save IMAGE_URI for CD
-      #   run: |
-      #     echo "${IMAGE_URI}" > image_uri.txt
-      #     cat image_uri.txt
+       # -------------------------
+       # 10) Share IMAGE_URI to CD
+       # -------------------------
+      - name: Save IMAGE_URI for CD
+        run: |
+           echo "${IMAGE_URI}" > image_uri.txt
+           cat image_uri.txt
 
-      # - name: Upload IMAGE_URI artifact
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: image-uri
-      #     path: image_uri.txt
+      - name: Upload IMAGE_URI artifact
+        uses: actions/upload-artifact@v4
+        with:
+           name: image-uri
+           path: image_uri.txt
 
   
