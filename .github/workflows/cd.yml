@@ -15,8 +15,6 @@ env:
 
 jobs:
   deploy:
-    env:
-      KUBECONFIG: ${{ runner.temp }}/kubeconfig
     # Deploy only if CI succeeded on a push to deployable branches
     if: ${{ github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'push' &&
@@ -35,6 +33,9 @@ jobs:
       # -------------------------
       - name: Checkout repo
         uses: actions/checkout@v4
+      - name: Set kubeconfig path
+        run: |
+          echo "KUBECONFIG=$RUNNER_TEMP/kubeconfig" >> "$GITHUB_ENV"
 
       # -------------------------
       # 2) Get IMAGE_URI produced by CI
