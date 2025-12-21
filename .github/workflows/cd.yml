@@ -1,0 +1,88 @@
+name: CD - Deploy to EKS
+
+on:
+  workflow_run:
+    workflows: ["CI - Build, Scan, Test, Sonar, Push to ECR"]
+    types: [completed]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ap-south-1
+
+jobs:
+  deploy:
+    # Deploy only if CI succeeded
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: self-hosted
+
+    # GitHub Environments selection (dev / stage / prod)
+    # You can control approvals in GitHub settings per environment.
+    environment: ${{ startsWith(github.event.workflow_run.head_branch, 'release/') && 'stage' || github.event.workflow_run.head_branch == 'develop' && 'dev' || github.event.workflow_run.head_branch == 'main' && 'prod' || 'dev' }}
+
+    steps:
+      # -------------------------
+      # 1) Checkout
+      # -------------------------
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # -------------------------
+      # 2) Get IMAGE_URI produced by CI
+      # -------------------------
+      - name: Download IMAGE_URI artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: image-uri
+          path: .
+          run-id: ${{ github.event.workflow_run.id }}  # download artifact from the CI workflow run
+
+      - name: Read IMAGE_URI
+        run: |
+          IMAGE_URI=$(cat image_uri.txt)
+          echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
+          echo "Deploying IMAGE_URI: $IMAGE_URI"
+
+      # -------------------------
+      # 3) Assume env-specific role (OIDC)
+      #    This role should be different for dev/stage/prod
+      # -------------------------
+      - name: Configure AWS credentials (OIDC - env role)
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME_CD }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # -------------------------
+      # 4) Setup kubectl + kubeconfig
+      # -------------------------
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: latest
+
+      - name: Update kubeconfig for EKS
+        run: |
+          aws eks update-kubeconfig --region $AWS_REGION --name "${{ vars.EKS_CLUSTER_NAME }}"
+
+      # -------------------------
+      # 5) Deploy
+      # Apply manifests + set image to exact IMAGE_URI
+      # -------------------------
+      - name: Apply manifests
+        run: |
+          kubectl apply -n "${{ vars.K8S_NAMESPACE }}" -f k8s/
+
+      - name: Set image (pin exact build)
+        run: |
+          kubectl -n "${{ vars.K8S_NAMESPACE }}" set image deployment/${{ vars.DEPLOYMENT_NAME }} \
+            ${{ vars.CONTAINER_NAME }}="${IMAGE_URI}"
+
+      # -------------------------
+      # 6) Optional but recommended: Rollout status (fail if stuck)
+      # -------------------------
+      - name: Wait for rollout
+        run: |
+          kubectl -n "${{ vars.K8S_NAMESPACE }}" rollout status deployment/${{ vars.DEPLOYMENT_NAME }} --timeout=300s
