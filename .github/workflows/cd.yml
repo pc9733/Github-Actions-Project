@@ -57,7 +57,7 @@ jobs:
       #    This role should be different for dev/stage/prod
       # -------------------------
       - name: Configure AWS credentials (OIDC - env role)
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME_CD }}
           aws-region: ${{ env.AWS_REGION }}
@@ -80,7 +80,7 @@ jobs:
       # -------------------------
       - name: Apply manifests
         run: |
-          kubectl apply -n "${{ vars.K8S_NAMESPACE }}" -f k8s/
+          kubectl apply -n "${{ vars.K8S_NAMESPACE }}" -f ds.yml
 
       - name: Set image (pin exact build)
         run: |
