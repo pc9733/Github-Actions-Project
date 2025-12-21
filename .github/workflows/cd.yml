@@ -77,6 +77,10 @@ jobs:
           mkdir -p "$(dirname "$KUBECONFIG")"
           aws eks update-kubeconfig --region $AWS_REGION --name "${{ vars.EKS_CLUSTER_NAME }}" --kubeconfig "$KUBECONFIG"
 
+      - name: Ensure namespace exists
+        run: |
+          kubectl get namespace "${{ vars.K8S_NAMESPACE }}" || kubectl create namespace "${{ vars.K8S_NAMESPACE }}"
+
       # -------------------------
       # 5) Deploy
       # Apply manifests + set image to exact IMAGE_URI
