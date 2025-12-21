@@ -14,8 +14,8 @@ permissions:
   contents: read
 
 env:
-  AWS_REGION: ap-south-1
-  ECR_REPOSITORY: bankapp
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: github-action-project-repo
   IMAGE_TAG: ${{ github.sha }}   # immutable tag, best practice
 
 jobs:
@@ -158,32 +158,32 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
 
-      # # -------------------------
-      # # 8) Configure AWS creds using OIDC (NO access keys)
-      # #    CI role has ECR push permissions
-      # # -------------------------
-      # - name: Configure AWS credentials (OIDC)
-      #   uses: aws-actions/configure-aws-credentials@v2
-      #   with:
-      #     role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME_CI }}
-      #     aws-region: ${{ env.AWS_REGION }}
+       # -------------------------
+       # 8) Configure AWS creds using OIDC (NO access keys)
+       #    CI role has ECR push permissions
+       # -------------------------
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME_CI }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      # # -------------------------
-      # # 9) Login to ECR + Build + Push image
-      # # -------------------------
-      # - name: Login to Amazon ECR
-      #   id: ecr-login
-      #   uses: aws-actions/amazon-ecr-login@v2
+       # -------------------------
+       # 9) Login to ECR + Build + Push image
+       # -------------------------
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
 
-      # - name: Build and push Docker image to ECR (tag = SHA)
-      #   env:
-      #     ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
-      #   run: |
-      #     IMAGE_URI="$ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}"
-      #     echo "Building image: $IMAGE_URI"
-      #     docker build -t "$IMAGE_URI" -f ./Dockerfile .
-      #     docker push "$IMAGE_URI"
-      #     echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
+      - name: Build and push Docker image to ECR (tag = SHA)
+        env:
+           ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+        run: |
+          IMAGE_URI="$ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}"
+          echo "Building image: $IMAGE_URI"
+          docker build -t "$IMAGE_URI" -f ./Dockerfile .
+          docker push "$IMAGE_URI"
+          echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
 
       # # -------------------------
       # # 10) Share IMAGE_URI to CD
