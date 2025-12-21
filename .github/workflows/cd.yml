@@ -11,7 +11,7 @@ permissions:
   actions: read  # required to download artifacts from the triggering CI workflow
 
 env:
-  AWS_REGION: ap-south-1
+  AWS_REGION: us-east-1
 
 jobs:
   deploy:
